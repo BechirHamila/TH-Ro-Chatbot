@@ -34,7 +34,7 @@ type(texts)
 texts[:10]
 
 # %%
-!rm -rf ./docs/chroma  # remove old database files if any
+! rm -rf ./docs/chroma  # remove old database files if any
 # %%
 
 # Making the Vector Embeddings
@@ -48,3 +48,12 @@ embedding = HuggingFaceEmbeddings(model_name=model_name)
 vectordb= Chroma.from_documents(documents=texts,
                  embedding=embedding,
                  persist_directory=persist_directory,)
+
+# %%
+
+#Testing the functionality of the DB
+
+question = "What english level do i need to study AAI bachelor "
+docs = vectordb.similarity_search(question,k=3)
+len(docs)
+docs
