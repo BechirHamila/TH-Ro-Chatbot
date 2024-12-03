@@ -156,15 +156,12 @@ def main():
             get_chat_history=lambda h : h,
             verbose=False
         )
-
-        context=retriever.get_relevant_documents(user_input)
         result=qa({"question":question})
         return result['answer'].strip()
 
 
 
-        # Start the conversation loop
-    
+    # Start the conversation loop
     while True:
         question = input("You: ")
         print("You: "+question)

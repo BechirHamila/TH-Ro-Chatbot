@@ -33,8 +33,7 @@ print(len(texts))
 type(texts)
 texts[:10]
 
-# %%
-! rm -rf ./docs/chroma  # remove old database files if any
+
 # %%
 
 # Making the Vector Embeddings
@@ -51,7 +50,7 @@ vectordb= Chroma.from_documents(documents=texts,
 
 # %%
 
-#Testing the functionality of the DB
+#Testing the functionality of the VS
 
 question = "What english level do i need to study AAI bachelor "
 docs = vectordb.similarity_search(question,k=3)
