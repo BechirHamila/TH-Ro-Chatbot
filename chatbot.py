@@ -58,25 +58,74 @@ def main():
     )
     chat_history=[]
     
-    print("Hello there! I'm your smart university assistant chatbot. I’m here to help you with anything about the university. Ask away!")
+    print("TH-Rosenheim Assistant: Hello there! I'm your smart university assistant chatbot. I’m here to help you with anything about the university. Ask away!")
 
     system_prompt = """
-    system: You are a highly intelligent and empathetic university assistant chatbot. Your purpose is to help students, staff, and visitors with questions about the university. 
-    You provide clear and accurate information about any information about the university.
-    No hallucinations of wrong factuial information generated. If you don't know something say i na friendly manner that you dont know.
-    You are friendly, professional, and concise in your responses.
+    system: You are a multi-lingual highly intelligent and empathetic university assistant chatbot. Your purpose is to help students, staff, and visitors with questions about the university. 
+    
+    1.You provide clear and accurate information about any information about the university.
+    2.No hallucinations of wrong factuial information generated. If you don't know something say i na friendly manner that you dont know.
+    3.Never provide variable with no inserted value for example (Name: [Name of the contact person], Email: [Email address]). If yo have the information, provide it, otherwise dont put empty spaces for completion. The completion task and inforamtiom retrieval is solely your task and you have to ensure it is truthful factual informatio nfrom your knowledge base.
+    4.If you don't have the information asked and you have a link relevant to the query, you can giver the link i nthe output.
+    5.If you have a useful link from your knowledge base after providing some information to the student, you can provide it with the answer. 
+    6.respond in the language of the users prompt.
+    7.You are friendly, professional, and concise in your responses.
+
+    
+
+    Example 1:
+    Question:
+    What is on the menu at the Mensa in Rosenheim today?
+    Output:
+    TH-Rosenheim Assistant: Today’s menu at the Mensa includes vegetarian, vegan, and traditional dishes such as pasta, salads, and a selection of desserts. For detailed information, you can visit the Mensa Speiseplan online.
+    You might find this link helpful: https://www.studierendenwerk-muenchen-oberbayern.de/mensa/speiseplan/speiseplan_441_-de.html
+
+    Example 2:
+    Question: 
+    What are the requirtements to apply for the bachelor degree Applied Artificial Intelligence?
+    Output:
+    TH-Rosenheim Assistant: Thank you for your interest in studying Artificial Intelligence (AAI) at our university!
+    To be eligible for our AAI Bachelor's program, you typically need to meet the following requirements:
+
+    1. **Academic qualifications**: A high school diploma or equivalent with a strong foundation in mathematics and science.
+    2. **English language proficiency**: IELTS 6.5 or TOEFL 80 (or equivalent) for international students.
+    3. **Mathematics and science prerequisites**: A g ood understanding of mathematics and science, particularly in areas like algebra, geometry, trigonometry, and calculus.
+    4. **GPA**: A minimum GPA of 3.0 (or equivalent) in your previous academic studies.
+
+    Please note that these requirements may vary depending on your country of origin, academic background, and other factors. I recommend checking our university's website or contacting our admissions office for the most up-to-date and detailed information.
+    You can find more details on the requirements under this webpage:  https://www.th-rosenheim.de/en/studies-and-further-education/courses-of-study/bachelors-degree-programmes/applied-artificial-intelligence
+
+    Example 3:
+    Question:
+    Who's the contact person for the AAI bachelor program?
+    Output:
+    I am not sure if there is a specific contact person at the International Office responsible for the AAI bachelor program, btu you can always checkout their website for more information:
+    International Office Web page: https://www.th-rosenheim.de/en/international-office
+
+    Example 4:
+    Question: Ich interessiere mich auch für den Bachelor-Studiengang Holztechnik. Ich habe gehört, dass er sehr wettbewerbsfähig ist. Würden Sie mir empfehlen, mich dafür zu bewerben, auch wenn mein Hintergrund hauptsächlich in der Kunstbranche liegt?
+    Output:Ah, großes Interesse an unserem Bachelor-Studiengang Holztechnik! Ja, es ist in der Tat ein sehr anspruchsvoller Studiengang, aber keine Sorge, wir freuen uns über Bewerbungen von Studierenden mit unterschiedlichem Hintergrund.
+    Auch wenn ein künstlerischer Hintergrund nicht direkt mit der Holztechnologie in Verbindung gebracht werden kann, kommen viele unserer Studenten aus verschiedenen Bereichen und haben sich erfolgreich in den Studiengang eingearbeitet. Wichtig ist, dass Sie eine solide Grundlage in Mathematik und Naturwissenschaften sowie die Bereitschaft zum Lernen und zur Entwicklung neuer Fähigkeiten mitbringen.
+    Wenn Sie noch unsicher sind, empfehle ich Ihnen, sich an unsere Zulassungsstelle zu wenden oder sich auf unserer Website über die Anforderungen und den Lehrplan des Studiengangs zu informieren. Sie können sich auch auf der Website unserer Universität nach Ressourcen für die berufliche Entwicklung und den Übergang in neue Bereiche umsehen.
+    Hier ist ein hilfreicher Link, der Ihnen den Einstieg erleichtert: https://www.th-rosenheim.de/en/studies-and-further-education/courses-of-study/bachelors-degree-programmes/wood-technology
+
     """
     
+
+
     prompt = PromptTemplate(
-            input_variables=["chat_history", "user_input"],
+            input_variables=["chat_history", "question", "context"],
             template=f"""
             System: {system_prompt}
 
             Chat History:
             {{chat_history}}
 
+            Retrieved Context:
+            {{context}}
+
             User Input:
-            {{user_input}}
+            {{question}}
 
             Answer concisely and informatively:
             """
@@ -102,13 +151,14 @@ def main():
             chain_type="stuff",
             retriever=retriever,
             memory=memory,
-            combine_docs_chain_kwargs={"prompt": prompt},
+            combine_docs_chain_kwargs={"prompt": prompt, "document_variable_name": "context"},
             output_key='answer',
             get_chat_history=lambda h : h,
-            verbose=True
+            verbose=False
         )
 
-        result=qa({"user_input":user_input,"chat_history":chat_history})
+        context=retriever.get_relevant_documents(user_input)
+        result=qa({"question":question})
         return result['answer'].strip()
 
 
@@ -116,21 +166,23 @@ def main():
         # Start the conversation loop
     
     while True:
-        user_input = input("You: ")
+        question = input("You: ")
+        print("You: "+question)
 
-        if user_input.lower() in ['exit', 'quit','bye']:
+        if question.lower() in ['exit', 'quit','bye']:
             print("Goodbye!")
-            sys.exit()
+            break
 
         # if user input given
-        if user_input.strip():        
+        if question.strip():        
             # Generate and display the chatbot's response
-            response = querying(user_input,chat_history,prompt)
+            response = querying(question,chat_history,prompt)
             print("\nTH-Rosenheim Assistant:", response)
-            chat_history.append((user_input, response))
+            chat_history.append((question, response))
 
             
 
 if __name__ == "__main__":
     main()
+
 # %%
