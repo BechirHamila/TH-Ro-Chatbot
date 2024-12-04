@@ -34,7 +34,8 @@ search_kwargs = config['retriever']['search_kwargs']
 memory_k = config['memory']['k']
 chain_type=config['qa']['chain_type']
 output_key=config['qa']['output_key']
-system_prompt=['system_prompt']
+system_prompt=config['system_prompt']
+quit_msg=config['quit_msg']
 
 
 def main():
@@ -46,7 +47,7 @@ def main():
             temperature=temperature,
             max_tokens=max_tokens)
     
-    
+
     def make_retriever(embedding_model,vectorstore_path,search_type,search_kwargs):
             embedding_function=HuggingFaceEmbeddings(model_name=embedding_model)
             vs = Chroma(persist_directory=vectorstore_path, embedding_function=embedding_function)
@@ -54,12 +55,12 @@ def main():
             return retriever
 
 
-    def create_prompt(system_prompt, chat_history):
+    def create_prompt(question,chat_history):
         return PromptTemplate(
             input_variables=["chat_history", "question", "context"],
             template=(f"System: {system_prompt}\nChat History:\n{chat_history}\n"
-            "Retrieved Context: {context}\nUser Input: {question}\n"
-            "Answer concisely and informatively:"))
+                    "Retrieved Context: {context}\n"f"User Input: {question}\n"
+                    "Answer concisely and informatively:"))
 
 
     def setup_memory(memory_k,return_messages=True):
@@ -69,7 +70,7 @@ def main():
             return_messages=return_messages)
 
 
-    def qa_conv_chain(llm, retriever, memory, prompt, output_key):
+    def qa_conv_chain(prompt, output_key=output_key):
         return ConversationalRetrievalChain.from_llm(
             llm=llm,
             chain_type=chain_type,
@@ -77,29 +78,26 @@ def main():
             memory=memory,
             combine_docs_chain_kwargs={"prompt": prompt, "document_variable_name": "context"},
             output_key=output_key,
-            get_chat_history=lambda h: h,
-            verbose=False
+            get_chat_history=lambda h: h
         )
     
 
-    def qa_chain(llm, prompt,retriever,memory,return_source_documents=True):
+    def qa_chain(prompt):
         return RetrievalQA.from_chain_type(
             llm,
             retriever,
             memory,
-            return_source_documents=return_source_documents,
-            chain_type_kwargs={"prompt": prompt,"document_variable_name": "context"}
-            )
+            chain_type_kwargs={"prompt": prompt})
     
 
-    def querying(question,chat_history,memory):
-        chat_history = "\n".join([f"User: {question}\nAssistant: {answer}" for question, answer in chat_history])
-        prompt = create_prompt(system_prompt, chat_history)
-        retriever=make_retriever(embedding_model,vectorstore_path,search_type,search_kwargs)
-               
+    def querying(question,chat_history):
+        chat_history= "\n".join([f"User: {question}\nAssistant: {answer}" for question, answer in chat_history])
+        prompt = create_prompt(system_prompt, chat_history)  
+
         # Create the conversation chain
-        qa_conversational_chain=qa_conv_chain(llm, retriever, memory, prompt, output_key)
-        response=qa_conversational_chain({"question":question,"chat_history":chat_history})
+        qa_conv_chain_=qa_conv_chain(prompt)
+        response=qa_conv_chain_({"question":question,"chat_history":chat_history})
+
         return response['answer'].strip()
 
 
@@ -108,25 +106,24 @@ def main():
         # Start the conversation loop
         while True:
             question = input("You: ")
-            print("You: "+question)
 
             if question.lower() in ['exit', 'quit','bye']:
                 # Getting a personalised Goodbye message
-                retriever=make_retriever(embedding_model,vectorstore_path,search_type,search_kwargs)
-                qa_chain_=qa_chain(llm, question,retriever,memory,return_source_documents=True)
-                response=qa_chain_({"question":question,"chat_history":chat_history})
-                print(response)
+                quit_msg_=quit_msg
+                response=querying(quit_msg_,chat_history)
+                print("\nTH-Rosenheim Assistant:", response)
                 break
 
             # if user input given
             if question.strip():        
                 # Generate and display the chatbot's response
-                response = querying(question,chat_history,memory)
+                response = querying(question,chat_history)
                 print("\nTH-Rosenheim Assistant:", response)
                 chat_history.append((question, response))
     
     
-
+    
+    retriever=make_retriever(embedding_model,vectorstore_path,search_type,search_kwargs)
     memory=setup_memory(memory_k)
     llm=initialize_llm()
     chat_w_llm()
