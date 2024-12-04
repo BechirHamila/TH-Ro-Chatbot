@@ -1,0 +1,7 @@
+groq
+langchain==0.1.16
+langchain-ibm==0.1.4
+huggingface==0.0.1
+huggingface-hub==0.23.4
+sentence-transformers==2.5.1
+chromadb==0.4.24
