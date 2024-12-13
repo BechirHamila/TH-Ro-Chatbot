@@ -1,9 +1,10 @@
-
 import os
 import groq
 import sys
 import yaml
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from langchain_chroma import Chroma
@@ -24,6 +25,7 @@ class MessageResponse(BaseModel):
 
 
 app=FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.add_middleware(
     CORSMiddleware,
@@ -138,9 +140,14 @@ retriever=make_retriever(embedding_model,vectorstore_path,search_type,search_kwa
 memory=setup_memory(memory_k)
 llm=initialize_llm()
 
+# Define a route for the root to serve the index.html
+@app.get("/", response_class=HTMLResponse)
+async def get_index():
+    with open("static/index.html", "r") as f:
+        return HTMLResponse(content=f.read())
+
 
 @app.post("/chat", response_model=MessageResponse)
-
 async def chat(request: MessageRequest):
     chat_history=[]
 

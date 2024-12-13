@@ -89,7 +89,7 @@
 
                 // Send user message to the chatbot backend
                 $.ajax({
-                    type: "POST",
+                    type: "GET",
                     url: "https://th-ro-chatbot.onrender.com/chat",  
                     data: JSON.stringify({ message: message }),
                     success: function (response) {
