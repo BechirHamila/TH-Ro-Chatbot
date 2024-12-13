@@ -33,7 +33,7 @@ def load_config(config_file):
             return yaml.safe_load(file)
 
 groq_api_key = os.environ['GROQ_API_KEY']
-config_file="config\config.yaml"
+config_file="config/config.yaml"
 config = load_config(config_file)
 model_name = config['model_name']
 temperature = config['temperature']
