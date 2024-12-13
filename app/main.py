@@ -3,6 +3,8 @@ import os
 import groq
 import sys
 import yaml
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 from langchain.vectorstores import Chroma
 from langchain.embeddings import HuggingFaceEmbeddings
@@ -11,6 +13,15 @@ from langchain.memory import ConversationBufferWindowMemory
 from langchain_core.prompts import PromptTemplate
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv, find_dotenv
+
+
+class MessageRequest(BaseModel):
+    message: str
+
+class MessageResponse(BaseModel):
+    response: str
+
+app=FastAPI()
 
 sys.path.append('../..')
 _ = load_dotenv(find_dotenv()) # read local .env file
@@ -38,102 +49,98 @@ system_prompt=config['system_prompt']
 quit_msg=config['quit_msg']
 
 
-def main():
     
-    def initialize_llm():
-        return ChatGroq(
-            groq_api_key=groq_api_key, 
-            model_name=model_name,
-            temperature=temperature,
-            max_tokens=max_tokens)
+def initialize_llm():
+    return ChatGroq(
+        groq_api_key=groq_api_key, 
+        model_name=model_name,
+        temperature=temperature,
+        max_tokens=max_tokens)
     
 
-    def make_retriever(embedding_model,vectorstore_path,search_type,search_kwargs):
-            embedding_function=HuggingFaceEmbeddings(model_name=embedding_model)
-            vs = Chroma(persist_directory=vectorstore_path, embedding_function=embedding_function)
-            retriever = vs.as_retriever(search_type=search_type, search_kwargs=search_kwargs)
-            return retriever
+def make_retriever(embedding_model,vectorstore_path,search_type,search_kwargs):
+        embedding_function=HuggingFaceEmbeddings(model_name=embedding_model)
+        vs = Chroma(persist_directory=vectorstore_path, embedding_function=embedding_function)
+        retriever = vs.as_retriever(search_type=search_type, search_kwargs=search_kwargs)
+        return retriever
 
 
-    def create_prompt(question,chat_history):
-        return PromptTemplate(
-            input_variables=["chat_history", "question", "context"],
-            template=(f"System: {system_prompt}\nChat History:\n{chat_history}\n"
-                    "Retrieved Context: {context}\n"f"User Input: {question}\n"
-                    "Answer concisely and informatively:"))
+def create_prompt(question,chat_history):
+    return PromptTemplate(
+           input_variables=["chat_history", "question", "context"],
+           template=(f"System: {system_prompt}\nChat History:\n{chat_history}\n"
+                "Retrieved Context: {context}\n"f"User Input: {question}\n"
+                 "Answer concisely and informatively:"))
 
-
-    def setup_memory(memory_k,return_messages=True):
+def setup_memory(memory_k,return_messages=True):
         return ConversationBufferWindowMemory(
-            k=memory_k, 
-            memory_key="chat_history", 
-            return_messages=return_messages)
+        k=memory_k, 
+        memory_key="chat_history", 
+        return_messages=return_messages)
 
 
-    def qa_conv_chain(prompt, output_key=output_key):
-        return ConversationalRetrievalChain.from_llm(
-            llm=llm,
-            chain_type=chain_type,
-            retriever=retriever,
-            memory=memory,
-            combine_docs_chain_kwargs={"prompt": prompt, "document_variable_name": "context"},
-            output_key=output_key,
-            get_chat_history=lambda h: h
-        )
+def qa_conv_chain(prompt, output_key=output_key):
+    return ConversationalRetrievalChain.from_llm(
+        llm=llm,
+        chain_type=chain_type,
+        retriever=retriever,
+        memory=memory,
+        combine_docs_chain_kwargs={"prompt": prompt, "document_variable_name": "context"},
+        output_key=output_key,
+        get_chat_history=lambda h: h
+    )
+    
     
 
-    def qa_chain(prompt):
-        return RetrievalQA.from_chain_type(
-            llm,
-            retriever,
-            memory,
-            chain_type_kwargs={"prompt": prompt})
-    
+def querying(question,chat_history):
+    chat_history= "\n".join([f"User: {question}\nAssistant: {answer}" for question, answer in chat_history])
+    prompt = create_prompt(system_prompt, chat_history)  
 
-    def querying(question,chat_history):
-        chat_history= "\n".join([f"User: {question}\nAssistant: {answer}" for question, answer in chat_history])
-        prompt = create_prompt(system_prompt, chat_history)  
+    # Create the conversation chain
+    qa_conv_chain_=qa_conv_chain(prompt)
+    response=qa_conv_chain_({"question":question,"chat_history":chat_history})
 
-        # Create the conversation chain
-        qa_conv_chain_=qa_conv_chain(prompt)
-        response=qa_conv_chain_({"question":question,"chat_history":chat_history})
-
-        return response['answer'].strip()
+    return response[output_key].strip()
 
 
-    def chat_w_llm():
-        chat_history=[]
-        # Start the conversation loop
-        while True:
-            question = input("You: ")
 
-            if question.lower() in ['exit', 'quit','bye']:
-                # New Feature: Getting a personalised Goodbye message
 
-                #quit_msg_=quit_msg
-                #prompt=create_prompt(quit_msg_,chat_history)
-                #qa=qa_chain(prompt)
-                #response=qa({"question":question})
-                #print("\nTH-Rosenheim Assistant:", response)
-                print("\nTH-Rosenheim Assistant: Goodbye! Have a nice day. I hope I was of help to you!")
-                break
+def chat_w_llm():
+    global chat_history
+    # Start the conversation loop
+    while True:
+        question = input("You: ")
 
-            # if user input given
-            if question.strip():        
-                # Generate and display the chatbot's response
-                response = querying(question,chat_history)
-                print("\nTH-Rosenheim Assistant:", response)
-                chat_history.append((question, response))
+        if question.lower() in ['exit', 'quit','bye']:
+            print("\nTH-Rosenheim Assistant: Goodbye! Have a nice day. I hope I was of help to you!")
+            break
+
+        # if user input given
+        if question.strip():        
+            # Generate and display the chatbot's response
+            response = querying(question,chat_history)
+            print("\nTH-Rosenheim Assistant:", response)
+            chat_history.append((question, response))
     
     
     
-    retriever=make_retriever(embedding_model,vectorstore_path,search_type,search_kwargs)
-    memory=setup_memory(memory_k)
-    llm=initialize_llm()
-    chat_w_llm()
+retriever=make_retriever(embedding_model,vectorstore_path,search_type,search_kwargs)
+memory=setup_memory(memory_k)
+llm=initialize_llm()
 
-        
-if __name__ == "__main__":
-    main()
-    
+
+
+@app.post("/chat", response_model=MessageResponse)
+
+async def chat(request: MessageRequest):
+    chat_history=[]
+
+    question = request.message
+    if not question.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+
+    answer = querying(question, chat_history)
+    chat_history.append((question, answer))
+
+    return {"response": answer}
 
