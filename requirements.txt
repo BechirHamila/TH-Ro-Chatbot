@@ -3,4 +3,4 @@ mangum
 groq
 langchain==0.1.16
 huggingface==0.0.1
-chromadb==0.4.24from 
+chromadb==0.4.24
