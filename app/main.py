@@ -6,8 +6,8 @@ import yaml
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from langchain.vectorstores import Chroma
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import Chroma
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.chains import  ConversationalRetrievalChain, RetrievalQA
 from langchain.memory import ConversationBufferWindowMemory
 from langchain_core.prompts import PromptTemplate
