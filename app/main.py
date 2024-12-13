@@ -143,7 +143,9 @@ llm=initialize_llm()
 # Define a route for the root to serve the index.html
 @app.get("/", response_class=HTMLResponse)
 async def get_index():
-    with open("static/index.html", "r") as f:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(base_dir, "static", "index.html")
+    with open(file_path, "r") as f:
         return HTMLResponse(content=f.read())
 
 
