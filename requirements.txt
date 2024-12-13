@@ -1,10 +1,10 @@
 FastAPI==0.115.6
 huggingface==0.0.1
 huggingface-hub==0.26.5
-langchain==0.2.15
-langchain-core==0.2.35
-langchain-community>=0.0.38
-langchain-groq==0.2.1
+langchain
+langchain-core
+langchain-community
+langchain-groq
 chromadb==0.4.24
 python-dotenv==1.0.0
 PyYAML==6.0
