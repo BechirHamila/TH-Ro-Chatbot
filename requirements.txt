@@ -5,6 +5,7 @@ langchain
 langchain-core
 langchain-community
 langchain-groq
+sentence-transformers
 chromadb==0.4.24
 python-dotenv==1.0.0
 PyYAML==6.0
