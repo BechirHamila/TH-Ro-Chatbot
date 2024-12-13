@@ -108,10 +108,14 @@ def main():
             question = input("You: ")
 
             if question.lower() in ['exit', 'quit','bye']:
-                # Getting a personalised Goodbye message
-                quit_msg_=quit_msg
-                response=querying(quit_msg_,chat_history)
-                print("\nTH-Rosenheim Assistant:", response)
+                # New Feature: Getting a personalised Goodbye message
+
+                #quit_msg_=quit_msg
+                #prompt=create_prompt(quit_msg_,chat_history)
+                #qa=qa_chain(prompt)
+                #response=qa({"question":question})
+                #print("\nTH-Rosenheim Assistant:", response)
+                print("\nTH-Rosenheim Assistant: Goodbye! Have a nice day. I hope I was of help to you!")
                 break
 
             # if user input given
