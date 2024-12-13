@@ -1,4 +1,6 @@
+FastAPI
+mangum
 groq
 langchain==0.1.16
 huggingface==0.0.1
-chromadb==0.4.24
+chromadb==0.4.24from 
