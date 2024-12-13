@@ -5,6 +5,8 @@ langchain
 langchain-core
 langchain-community
 langchain-groq
+langchain-huggingface
+langchain-chroma
 sentence-transformers
 chromadb==0.4.24
 python-dotenv==1.0.0

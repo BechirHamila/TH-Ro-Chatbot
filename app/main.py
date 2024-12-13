@@ -6,13 +6,14 @@ import yaml
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_chroma import Chroma
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.chains import  ConversationalRetrievalChain, RetrievalQA
 from langchain.memory import ConversationBufferWindowMemory
 from langchain_core.prompts import PromptTemplate
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv, find_dotenv
+from fastapi.middleware.cors import CORSMiddleware
 
 
 class MessageRequest(BaseModel):
@@ -21,7 +22,16 @@ class MessageRequest(BaseModel):
 class MessageResponse(BaseModel):
     response: str
 
+
 app=FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins (you can also specify the URL of your frontend here for security)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
 
 sys.path.append('../..')
 _ = load_dotenv(find_dotenv()) # read local .env file
