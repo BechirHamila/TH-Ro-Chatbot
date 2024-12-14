@@ -147,7 +147,6 @@ def chat_w_llm():
 retriever=make_retriever(embedding_model,vectorstore_path,search_type,search_kwargs)
 memory=setup_memory(memory_k)
 llm=initialize_llm()
-chat_w_llm()
 
 
 
