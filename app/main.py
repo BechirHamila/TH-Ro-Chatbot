@@ -58,7 +58,7 @@ memory_k = config['memory']['k']
 chain_type=config['qa']['chain_type']
 output_key=config['qa']['output_key']
 system_prompt=config['system_prompt']
-
+chat_history=[]
 
     
 def initialize_llm():
@@ -104,20 +104,29 @@ def qa_conv_chain(prompt, output_key=output_key):
     
 
 def querying(question,chat_history):
-    chat_history= "\n".join([f"User: {question}\nAssistant: {answer}" for question, answer in chat_history])
-    prompt = create_prompt(system_prompt, chat_history)  
+    # Append the current question to chat history
+    chat_history.append((question, None)) # Placeholder for response
+
+    # Build a prompt including the full chat history
+    formatted_history = "\n".join(
+        [f"User: {q}\nAssistant: {a}" for q, a in chat_history if a is not None]
+    )
+    prompt = create_prompt(question, formatted_history)  
 
     # Create the conversation chain
     qa_conv_chain_=qa_conv_chain(prompt)
     response=qa_conv_chain_({"question":question,"chat_history":chat_history})
+    
+    # Update the latest response in chat history
+    final_response = response[output_key].strip()
+    chat_history.append((question, final_response))
 
-    return response[output_key].strip()
+    return final_response
 
 
 
 
 def chat_w_llm():
-    global chat_history
     # Start the conversation loop
     while True:
         question = input("You: ")
@@ -138,7 +147,8 @@ def chat_w_llm():
 retriever=make_retriever(embedding_model,vectorstore_path,search_type,search_kwargs)
 memory=setup_memory(memory_k)
 llm=initialize_llm()
-chat_history=[]
+chat_w_llm()
+
 
 
 # Define a route for the root to serve the index.html
