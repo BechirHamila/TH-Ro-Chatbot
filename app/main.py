@@ -139,6 +139,8 @@ def chat_w_llm():
 retriever=make_retriever(embedding_model,vectorstore_path,search_type,search_kwargs)
 memory=setup_memory(memory_k)
 llm=initialize_llm()
+chat_history=[]
+
 
 # Define a route for the root to serve the index.html
 @app.get("/", response_class=HTMLResponse)
@@ -149,13 +151,17 @@ async def get_index():
         return HTMLResponse(content=f.read())
 
 
+
 @app.post("/chat", response_model=MessageResponse)
 async def chat(request: MessageRequest):
-    chat_history=[]
-
+    
+    global chat_history
     question = request.message
     if not question.strip():
         raise HTTPException(status_code=400, detail="Message cannot be empty")
+
+    if question.lower() in ['exit', 'quit', 'bye']:
+        return {"response": "Goodbye! Have a nice day. I hope I was of help to you!"}
 
     answer = querying(question, chat_history)
     chat_history.append((question, answer))
