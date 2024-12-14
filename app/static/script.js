@@ -1,8 +1,7 @@
 $(document).ready(function () {
     
-    const apiUrl = process.env.NODE_ENV === 'production'
-        ? 'https://th-ro-chatbot.onrender.com/chat'  // Production URL
-        : 'http://127.0.0.1:8000/chat';  // Development URL 
+    const apiUrl ='https://th-ro-chatbot.onrender.com/chat';  // Production URL
+        
 
     // Function to append messages to the chat window
     function appendMessage(sender, message) {
