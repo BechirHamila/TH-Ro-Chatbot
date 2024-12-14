@@ -63,57 +63,6 @@
             </div>
         </div>
     </div>
-    <script>
-        $(function () {
-            // When the "Send" button is clicked
-            $('#chatbot-form-btn').click(function (e) {
-                e.preventDefault();
-                $('#chatbot-form').submit();
-            });
-
-            // Handle form submission
-            $('#chatbot-form').submit(function (e) {
-                e.preventDefault();
-                var message = $('#messageText').val();
-
-                // Display user message
-                $(".media-list").append(`
-                    <li class="media">
-                        <div class="media-body">
-                            <div class="media" style="text-align:right; color: #2EFE2E;">
-                                <div class="media-body">${message}</div>
-                            </div>
-                        </div>
-                    </li>
-                `);
-
-                // Send user message to the chatbot backend
-                $.ajax({
-                    type: "POST",
-                    url: "https://th-ro-chatbot.onrender.com/chat",  
-                    data: JSON.stringify({ message: message }),
-                    success: function (response) {
-                        $('#messageText').val('');  // Clear input field
-                        var answer = response.response;
-
-                        // Display chatbot response
-                        $(".media-list").append(`
-                            <li class="media">
-                                <div class="media-body">
-                                    <div class="media" style="color: white;">
-                                        <div class="media-body">${answer}</div>
-                                    </div>
-                                </div>
-                            </li>
-                        `);
-                        $(".fixed-panel").stop().animate({ scrollTop: $(".fixed-panel")[0].scrollHeight }, 1000);
-                    },
-                    error: function (error) {
-                        console.error("Error:", error);
-                    }
-                });
-            });
-        });
-    </script>
+    <script src="static/script.js"></script>
 </body>
 </html>
