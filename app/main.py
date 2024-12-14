@@ -58,7 +58,6 @@ memory_k = config['memory']['k']
 chain_type=config['qa']['chain_type']
 output_key=config['qa']['output_key']
 system_prompt=config['system_prompt']
-quit_msg=config['quit_msg']
 
 
     
