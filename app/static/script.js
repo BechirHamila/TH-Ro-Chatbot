@@ -38,7 +38,7 @@ $(document).ready(function () {
         }
 
         // Display user message in the chat
-        appendMessage('user', message);
+        appendMessage('user', 'You: '+message);
 
         // Send the user's message to the backend API via AJAX
         $.ajax({
@@ -51,7 +51,7 @@ $(document).ready(function () {
                 const answer = response.response;  // Get the chatbot's response
 
                 // Display chatbot's response
-                appendMessage('bot', answer);
+                appendMessage('bot', 'TH-Ro: '+answer);
             },
             error: function (error) {
                 console.error("Error:", error);
