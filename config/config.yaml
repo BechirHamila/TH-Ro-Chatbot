@@ -14,6 +14,8 @@ qa:
   chain_type: "stuff"
   output_key: "answer"
 
+static_dir: "static_dir"
+
 quit_msg: "I'm leaving the chatbot bubble—thanks for everything, goodbye! (system: provide a short concise answer saying goodbye back and you can add something on top of it related to the chat_history, for example if yo uwere talking about applying for a certain program, at the end you say i hope trhe application goes smoothly, if the student was discussing exams he will sit for soon, you say good luck with your exams. those are examples for few shot inference, you cna get creative with it.). The conversation will end here."
 
 system_prompt: |

@@ -2,7 +2,9 @@ import os
 import groq
 import sys
 import yaml
-from fastapi import FastAPI, HTTPException
+import logging
+
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -15,29 +17,25 @@ from langchain_core.prompts import PromptTemplate
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv, find_dotenv
 from fastapi.middleware.cors import CORSMiddleware
+from uuid import uuid4
+from typing import Dict
 
-
-class MessageRequest(BaseModel):
-    message: str
-
-class MessageResponse(BaseModel):
-    response: str
-
-
-app=FastAPI()
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins (you can also specify the URL of your frontend here for security)
-    allow_credentials=True,
-    allow_methods=["POST"],  # Allow all HTTP methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allow all headers
-)
+from datetime import datetime, timedelta
+from fastapi_utils.tasks import repeat_every
 
 sys.path.append('../..')
 _ = load_dotenv(find_dotenv()) # read local .env file
 groq.api_key  = os.getenv('GROQ_API_KEY')
+
+
+class MessageRequest(BaseModel):
+    message: str
+    session_id: str
+
+class MessageResponse(BaseModel):
+    response: str
+    session_id: str
+
 
 
 def load_config(config_file):
@@ -58,8 +56,20 @@ memory_k = config['memory']['k']
 chain_type=config['qa']['chain_type']
 output_key=config['qa']['output_key']
 system_prompt=config['system_prompt']
-chat_history=[]
+static_dir=static_dir = os.path.join(os.path.dirname(__file__), "app", "static")
+session_histories: Dict[str, list] = {}
+session_timestamps: Dict[str, datetime] = {}
 
+
+app=FastAPI()
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins (you can also specify the URL of your frontend here for security)
+    allow_credentials=True,
+    allow_methods=["POST"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
     
 def initialize_llm():
     return ChatGroq(
@@ -103,7 +113,7 @@ def qa_conv_chain(prompt, output_key=output_key):
     
     
 
-def querying(question,chat_history):
+def querying(question,chat_history,session_id):
     # Append the current question to chat history
     chat_history.append((question, None)) # Placeholder for response
 
@@ -118,16 +128,16 @@ def querying(question,chat_history):
     response=qa_conv_chain_({"question":question,"chat_history":chat_history})
     
     # Update the latest response in chat history
-    final_response = response[output_key].strip()
-    chat_history.append((question, final_response))
+    answer = response[output_key].strip()
+    chat_history.append((question, answer))
+    session_histories[session_id] = chat_history
 
-    return final_response
+    return {"response": answer, "session_id": session_id}
 
 
 
 
-def chat_w_llm():
-    # Start the conversation loop
+#def chat_w_llm():
     while True:
         question = input("You: ")
 
@@ -140,7 +150,7 @@ def chat_w_llm():
             # Generate and display the chatbot's response
             response = querying(question,chat_history)
             print("\nTH-Rosenheim Assistant:", response)
-            chat_history.append((question, response))
+            chat_history.append((question, response))'
     
     
     
@@ -162,17 +172,46 @@ async def get_index():
 
 @app.post("/chat", response_model=MessageResponse)
 async def chat(request: MessageRequest):
-    
-    global chat_history
+    session_id = request.session_id
     question = request.message
-    if not question.strip():
+    
+    if not question:
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
+    if session_id not in session_histories:
+        raise HTTPException(status_code=404, detail="Session expired or does not exist. Please start a new session.")
+
+    # Check if the session exists; if not, initialize it
+    if session_id not in session_histories:
+        session_histories[session_id] = []
+
+    # Retrieve the chat history for this session
+    chat_history = session_histories[session_id]
+
     if question.lower() in ['exit', 'quit', 'bye']:
-        return {"response": "Goodbye! Have a nice day. I hope I was of help to you!"}
+        return {"response": "Goodbye! Have a nice day. I hope I was of help to you!", "session_id": session_id}
 
-    answer = querying(question, chat_history)
+    answer = querying(question, chat_history, session_id)
     chat_history.append((question, answer))
+    session_histories[session_id] = chat_history
+    session_timestamps[session_id] = datetime.now()
 
-    return {"response": answer}
+    return {"response": answer, "session_id": session_id}
 
+@app.get("/new_session")
+async def new_session():
+    """Generate a new unique session ID."""
+    new_session_id = str(uuid4())
+    session_timestamps[new_session_id] = datetime.now()
+    return {"session_id": new_session_id, "message": "New session created successfully."}
+
+
+@app.on_event("startup")
+@repeat_every(seconds=3600)  # Run every hour
+def cleanup_sessions():
+    now = datetime.now()
+    for session_id, timestamp in list(session_timestamps.items()):
+        if now - timestamp > timedelta(hours=1):  # Remove sessions older than 1 hour
+            del session_histories[session_id]
+            del session_timestamps[session_id]
+            logger.info(f"Cleaned up session {session_id}")

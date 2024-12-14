@@ -13,3 +13,4 @@ python-dotenv==1.0.0
 PyYAML==6.0
 uvicorn==0.22.0
 pydantic==2.7.4
+fastapi_utils
