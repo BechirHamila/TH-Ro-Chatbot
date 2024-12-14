@@ -7,95 +7,101 @@
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
     <style>
-        body {
-            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
-            font-family: 'Roboto', sans-serif;
-        }
-        .container {
-            margin-top: 50px;
-        }
-        h3 {
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
-        }
-        .panel {
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
-        }
-        .panel-info > .panel-heading {
-            background-color: #4a90e2;
-            color: white;
-            border: none;
-            font-weight: bold;
-            text-align: center;
-            font-size: 18px;
-        }
-        .fixed-panel {
-            min-height: 400px;
-            max-height: 400px;
-            background-color: #ffffff;
-            color: #333;
-            overflow: auto;
-            border-radius: 15px 15px 0 0;
-            padding: 10px;
-        }
-        .media-list {
-            overflow: auto;
-            display: table;
-            word-wrap: break-word;
-        }
-        .panel-footer {
-            background-color: #f7f7f7;
-            border: none;
-            border-radius: 0 0 15px 15px;
-        }
-        .input-group {
-            border: 2px solid #4a90e2;
-            border-radius: 25px;
-            overflow: hidden;
-        }
-        .input-group input {
-            border: none;
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 25px;
-        }
-        .input-group input:focus {
-            outline: none;
-        }
-        .input-group .btn-info {
-            background-color: #4a90e2;
-            border: none;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-        }
-        .input-group .btn-info:hover {
-            background-color: #357abd;
-        }
-        .media-list li {
-            margin-bottom: 10px;
-            padding: 8px;
-            border-radius: 10px;
-        }
-        .media-list .user-message {
-            background-color: #4a90e2;
-            color: white;
-            text-align: right;
-        }
-        .media-list .bot-message {
-            background-color: #f1f1f1;
-            color: #333;
-            text-align: left;
-        }
-    </style>
+    body {
+        background: #000000; /* background */
+        font-family: 'Roboto', sans-serif;
+        color: #FFFFFF; /* Default text color */
+    }
+    .container {
+        margin-top: 50px;
+    }
+    h3 {
+        color: #FFFFFF;
+        text-align: center;
+    }
+    .panel {
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+    .panel-heading {
+        background-color: #000000; /* header */
+        color: #FFFFFF; 
+        text-align: center;
+        font-weight: bold;
+        font-size: 18px;
+    }
+    .fixed-panel {
+        min-height: 400px;
+        max-height: 400px;
+        background-color: #F39200; /* chat background */
+        overflow-y: auto;
+        padding: 10px;
+        border-radius: 15px 15px 0 0;
+    }
+    .media-list .message {
+        display: block;
+        max-width: 75%; /* Bubble width */
+        margin-bottom: 10px;
+        padding: 10px;
+        border-radius: 15px;
+        box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.2);
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    .media-list .user-message {
+        background-color: #FFFFFF; /* White bubble for user */
+        color: #000000; /* Black text */
+        align-self: flex-end;
+        margin-left: auto;
+        text-align: right;
+    }
+    .media-list .bot-message {
+        background-color: #FFFFFF; /* White bubble for bot */
+        color: #000000; /* Black text */
+        align-self: flex-start;
+        margin-right: auto;
+        text-align: left;
+    }
+    .panel-footer {
+        background-color: #000000; /* Match footer with header */
+        padding: 10px;
+        border-radius: 0 0 15px 15px;
+    }
+    .input-group {
+        border-radius: 25px;
+        overflow: hidden;
+    }
+    .input-group input {
+        border: 2px solid #F39200; /* Orange border */
+        border-radius: 25px;
+        padding: 10px;
+        font-size: 16px;
+        background: #FFFFFF; /* White background for input */
+        color: #000000; /* Black text */
+    }
+    .input-group input:focus {
+        outline: none;
+        border-color: #E07B00; /* Darker orange on focus */
+    }
+    .input-group .btn-info {
+        background-color: #F39200; /* Orange button */
+        border: none;
+        color: #FFFFFF;
+        font-size: 16px;
+        font-weight: bold;
+    }
+    .input-group .btn-info:hover {
+        background-color: #E07B00; /* Darker orange */
+    }
+</style>
+    
 </head>
 <body>
     <div class="container">
         <div class="row">
-            <h3 class="text-center"><font color="white">TH-Rosenheim AI-Powered ChatBot Assitant</font></h3>
+            <h3 class="text-center"><font color="black">TH-Rosenheim AI-Powered ChatBot Assitant</font></h3>
             <div class="col-md-4 col-md-offset-4">
                 <div id="chatPanel" class="panel panel-info">
                     <div class="panel-heading">
