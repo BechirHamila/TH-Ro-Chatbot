@@ -137,21 +137,21 @@ def querying(question,chat_history,session_id):
 
 
 
-#def chat_w_llm():
-    while True:
-        question = input("You: ")
+'''    def chat_w_llm():
+        while True:
+            question = input("You: ")
 
-        if question.lower() in ['exit', 'quit','bye']:
-            print("\nTH-Rosenheim Assistant: Goodbye! Have a nice day. I hope I was of help to you!")
-            break
+            if question.lower() in ['exit', 'quit','bye']:
+                print("\nTH-Rosenheim Assistant: Goodbye! Have a nice day. I hope I was of help to you!")
+                break
 
-        # if user input given
-        if question.strip():        
-            # Generate and display the chatbot's response
-            response = querying(question,chat_history)
-            print("\nTH-Rosenheim Assistant:", response)
-            chat_history.append((question, response))'
-    
+            # if user input given
+            if question.strip():        
+                # Generate and display the chatbot's response
+                response = querying(question,chat_history)
+                print("\nTH-Rosenheim Assistant:", response)
+                chat_history.append((question, response)) '''
+        
     
     
 retriever=make_retriever(embedding_model,vectorstore_path,search_type,search_kwargs)
