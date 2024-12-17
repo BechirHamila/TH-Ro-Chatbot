@@ -10,12 +10,15 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from langchain_chroma import Chroma
-from langchain_community.vectorstores import FAISS
+#from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain.document_loaders import TextLoader
 from langchain.chains import  ConversationalRetrievalChain, RetrievalQA
 from langchain.memory import ConversationBufferWindowMemory
 from langchain_core.prompts import PromptTemplate
 from langchain_groq import ChatGroq
+from langchain.schema import Document
 from dotenv import load_dotenv, find_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 from uuid import uuid4
@@ -49,7 +52,10 @@ config = load_config(config_file)
 model_name = config['model_name']
 temperature = config['temperature']
 max_tokens = config['max_tokens']
-vectorstore_path = config['vectorstore']['path']
+#splitter=config['splitter']
+#data_path=config['data_path']
+#vectorstore_path_FAISS = config['vectorstore']['path_FAISS']
+vectorstore_path_chroma = config['vectorstore']['path_chroma']
 embedding_model = config['vectorstore']['embedding_model']
 search_type = config['retriever']['search_type']
 search_kwargs = config['retriever']['search_kwargs']
@@ -69,7 +75,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allow all origins (you can also specify the URL of your frontend here for security)
     allow_credentials=True,
-    allow_methods=["POST"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_methods=["POST","GET"],  # Allow all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers
 )
     
@@ -79,9 +85,22 @@ def initialize_llm():
         model_name=model_name,
         temperature=temperature,
         max_tokens=max_tokens)
-    
 
-def make_retriever(embedding_model,vectorstore_path,search_type,search_kwargs):
+
+def split_data_to_chunks(data):
+    loader=TextLoader(data)
+    documents=loader.load()
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1500,
+        chunk_overlap=200,
+        separators=[splitter]
+    )
+
+    texts=text_splitter.split_documents(documents)
+    return texts
+
+# To be added and tested later (might improve ouputs)
+'''def make_retriever_FAISS(embedding_model,vectorstore_path,search_type,search_kwargs):
     embedding_function=HuggingFaceEmbeddings(model_name=embedding_model)
 
     if os.path.exists(vectorstore_path):
@@ -89,15 +108,21 @@ def make_retriever(embedding_model,vectorstore_path,search_type,search_kwargs):
         vs = FAISS.load_local(vectorstore_path, embedding_function,allow_dangerous_deserialization=True)
 
     else:
-        # Create a new FAISS index (requires at least one document)
+        texts=split_data_to_chunks(data_path)
         # If no documents exist yet, initialize an empty index
-        from langchain.schema import Document
-        empty_docs = [Document(page_content="placeholder")]
-        vs = FAISS.from_documents(empty_docs, embedding_function)
+        vs = FAISS.from_documents(texts, embedding_function)
         vs.save_local(vectorstore_path)  # Save the new FAISS index
 
     retriever = vs.as_retriever(search_type=search_type, search_kwargs=search_kwargs)
-    return retriever
+    return retriever'''
+
+
+def make_retriever(embedding_model,vectorstore_path,search_type,search_kwargs):
+        embedding_function=HuggingFaceEmbeddings(model_name=embedding_model)
+        vs = Chroma(persist_directory=vectorstore_path, embedding_function=embedding_function)
+        retriever = vs.as_retriever(search_type=search_type, search_kwargs=search_kwargs)
+        return retriever
+
 
 
 def create_prompt(question,chat_history):
@@ -146,7 +171,7 @@ def querying(question,chat_history,session_id):
     chat_history.append((question, answer))
     session_histories[session_id] = chat_history
 
-    return {"response": answer, "session_id": session_id}
+    return answer
 
 
 
@@ -169,7 +194,7 @@ def querying(question,chat_history,session_id):
         
     
 
-retriever=make_retriever(embedding_model,vectorstore_path,search_type,search_kwargs)
+retriever=make_retriever(embedding_model,vectorstore_path_chroma,search_type,search_kwargs)
 memory=setup_memory(memory_k)
 llm=initialize_llm()
 #chat_w_llm()
@@ -219,6 +244,7 @@ async def new_session():
     """Generate a new unique session ID."""
     new_session_id = str(uuid4())
     session_timestamps[new_session_id] = datetime.now()
+    session_histories[new_session_id] = []
     return {"session_id": new_session_id, "message": "New session created successfully."}
 
 
