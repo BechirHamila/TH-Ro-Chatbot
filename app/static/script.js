@@ -1,63 +1,69 @@
 $(document).ready(function () {
-    
-    const apiUrl ='https://th-ro-chatbot.onrender.com/chat';  // Production URL
-        
+    const apiUrl = 'http://127.0.0.1:8000'; 
+    let sessionId = null;
 
-    // Function to append messages to the chat window
-    function appendMessage(sender, message) {
-        const senderClass = sender === 'user' ? 'text-right' : 'text-left';
-        const messageColor = sender === 'user' ? '#2EFE2E' : 'white';
+    // Initialize session when the page loads
+    initializeSession();
 
-        $(".media-list").append(`
-            <li class="media">
-                <div class="media-body">
-                    <div class="media ${senderClass}" style="color: ${messageColor};">
-                        <div class="media-body">${message}</div>
-                    </div>
-                </div>
-            </li>
-        `);
-
-        // Auto-scroll the chat box to the bottom
-        $(".fixed-panel").stop().animate({ scrollTop: $(".fixed-panel")[0].scrollHeight }, 1000);
+    // initialize a new session
+    function initializeSession() {
+        $.ajax({
+            type: "GET",
+            url: `${apiUrl}/new_session`,
+            success: function (response) {
+                sessionId = response.session_id;
+                console.log("New session initialized:", sessionId);
+                appendMessage('bot', "TH-Ro: Hello! How can I assist you today?");
+            },
+            error: function () {
+                console.error("Failed to initialize session.");
+                appendMessage('bot', "Sorry, something went wrong initializing the chat.");
+            }
+        });
     }
 
-    // When the "Send" button is clicked
-    $('#chatbot-form-btn').click(function (e) {
-        e.preventDefault();
-        $('#chatbot-form').submit();
-    });
+    // Function to send user input to the backend
+    function sendMessage() {
+        const userMessage = $("#userInput").val().trim(); 
+        if (!userMessage) return; 
 
-    // Handle form submission
-    $('#chatbot-form').submit(function (e) {
-        e.preventDefault();
-        const message = $('#messageText').val().trim();  // Remove unnecessary whitespace
+        // Display user's message in chat
+        appendMessage('user', userMessage);
 
-        if (!message) {
-            return; // Do nothing if the message is empty
-        }
-
-        // Display user message in the chat
-        appendMessage('user', 'You: '+message);
-
-        // Send the user's message to the backend API via AJAX
+        // Send the message to the backend API
         $.ajax({
             type: "POST",
-            url: apiUrl,
-            data: JSON.stringify({ message: message }),  // Send message as JSON
-            contentType: "application/json",  // Set content type to JSON
+            url: `${apiUrl}/chat`,
+            data: JSON.stringify({ message: userMessage, session_id: sessionId }),
+            contentType: "application/json",
             success: function (response) {
-                $('#messageText').val('');  // Clear input field after sending
-                const answer = response.response;  // Get the chatbot's response
-
-                // Display chatbot's response
-                appendMessage('bot', 'TH-Ro: '+answer);
+                const botResponse = response.response; // Get the chatbot's response
+                appendMessage('bot', botResponse); // Display bot's response
+                console.log("Chatbot answer:", botResponse);
             },
             error: function (error) {
                 console.error("Error:", error);
-                // Optionally display an error message in the UI
                 appendMessage('bot', "Sorry, something went wrong. Please try again.");
             }
         });
+
+        $("#userInput").val(""); // Clear the inpuet field aftr sending
+    }
+
+    // Function to append messages to the chat window
+    function appendMessage(sender, message) {
+        const senderClass = sender === 'user' ? 'user-message' : 'bot-message';
+        const formattedMessage = `<div class="message ${senderClass}">${message}</div>`;
+        $("#chatBody").append(formattedMessage);
+        $("#chatBody").scrollTop($("#chatBody")[0].scrollHeight); // Auto-scroll to bottom
+    }
+
+    // Event listeners for "Send" button and Enter key
+    $("#sendMessage").click(sendMessage);
+
+    $("#userInput").keypress(function (e) {
+        if (e.which === 13) { // Enter key triggers send
+            sendMessage();
+        }
     });
 });

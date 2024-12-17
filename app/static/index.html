@@ -1,129 +1,203 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+    <title>TH-Rosenheim ChatBot</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 
     <style>
-    body {
-        background: #000000; /* background */
-        font-family: 'Roboto', sans-serif;
-        color: #FFFFFF; /* Default text color */
-    }
-    .container {
-        margin-top: 50px;
-    }
-    h3 {
-        color: #FFFFFF;
-        text-align: center;
-    }
-    .panel {
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    }
-    .panel-heading {
-        background-color: #000000; /* header */
-        color: #FFFFFF; 
-        text-align: center;
-        font-weight: bold;
-        font-size: 18px;
-    }
-    .fixed-panel {
-        min-height: 400px;
-        max-height: 400px;
-        background-color: #F39200; /* chat background */
-        overflow-y: auto;
-        padding: 10px;
-        border-radius: 15px 15px 0 0;
-    }
-    .media-list .message {
-        display: block;
-        max-width: 75%; /* Bubble width */
-        margin-bottom: 10px;
-        padding: 10px;
-        border-radius: 15px;
-        box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.2);
-        font-size: 14px;
-        line-height: 1.5;
-    }
-    .media-list .user-message {
-        background-color: #FFFFFF; /* White bubble for user */
-        color: #000000; /* Black text */
-        align-self: flex-end;
-        margin-left: auto;
-        text-align: right;
-    }
-    .media-list .bot-message {
-        background-color: #FFFFFF; /* White bubble for bot */
-        color: #000000; /* Black text */
-        align-self: flex-start;
-        margin-right: auto;
-        text-align: left;
-    }
-    .panel-footer {
-        background-color: #000000; /* Match footer with header */
-        padding: 10px;
-        border-radius: 0 0 15px 15px;
-    }
-    .input-group {
-        border-radius: 25px;
-        overflow: hidden;
-    }
-    .input-group input {
-        border: 2px solid #F39200; /* Orange border */
-        border-radius: 25px;
-        padding: 10px;
-        font-size: 16px;
-        background: #FFFFFF; /* White background for input */
-        color: #000000; /* Black text */
-    }
-    .input-group input:focus {
-        outline: none;
-        border-color: #E07B00; /* Darker orange on focus */
-    }
-    .input-group .btn-info {
-        background-color: #F39200; /* Orange button */
-        border: none;
-        color: #FFFFFF;
-        font-size: 16px;
-        font-weight: bold;
-    }
-    .input-group .btn-info:hover {
-        background-color: #E07B00; /* Darker orange */
-    }
-</style>
-    
+        /* General Styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f7f6; /* Light background for professionalism */
+            color: #333333; /* Default text color */
+        }
+
+        h3 {
+            text-align: center;
+            color: #000000;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        /* Chat Container */
+        .chat-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        /* Chat Header */
+        .chat-header {
+            background-color: #f09000
+
+; /* Deep professional blue */
+            color: #ffffff;
+            text-align: center;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* Chat Body */
+        .chat-body {
+            height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            background-color: #fafafa;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 70%;
+            line-height: 1.5;
+            word-wrap: break-word;
+            white-space: pre-wrap; /* Allows newlines */
+        }
+
+        .bot-message {
+            background-color: #afafaf; /* Light blue for bot messages */
+            align-self: flex-start;
+            color: #000000;
+        }
+
+        .user-message {
+            background-color: #fdeed3; /* Light green for user messages */
+            align-self: flex-end;
+            color: #000000;
+            text-align: right;
+        }
+
+        /* Chat Footer */
+        .chat-footer {
+            display: flex;
+            padding: 10px;
+            background-color: #f09000;
+        }
+
+        .chat-footer input {
+            flex-grow: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .chat-footer button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            background-color: #000000;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .chat-footer button:hover {
+            background-color: #e07b00;
+        }
+
+        strong {
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="row">
-            <h3 class="text-center"><font color="black">TH-Rosenheim AI-Powered ChatBot Assitant</font></h3>
-            <div class="col-md-4 col-md-offset-4">
-                <div id="chatPanel" class="panel panel-info">
-                    <div class="panel-heading">
-                        <strong>TH-Ro Assistant</strong>
-                    </div>
-                    <div class="panel-body fixed-panel">
-                        <ul class="media-list"></ul>
-                    </div>
-                    <div class="panel-footer">
-                        <form method="post" id="chatbot-form">
-                            <div class="input-group">
-                                <input type="text" class="form-control" placeholder="Enter Message" name="messageText" id="messageText" autofocus />
-                                <span class="input-group-btn">
-                                    <button class="btn btn-info" type="button" id="chatbot-form-btn">Send</button>
-                                </span>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
+    <h3>TH-Rosenheim ChatBot Assistant</h3>
+    <div class="chat-container">
+        <div class="chat-header">TH-Ro Assistant</div>
+        <div class="chat-body" id="chatBody">
+            <!-- Chat messages will appear here -->
+        </div>
+        <div class="chat-footer">
+            <input type="text" id="userInput" placeholder="Type your message here...">
+            <button id="sendMessage">Send</button>
         </div>
     </div>
-    <script src="static/script.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            const apiUrl = 'http://127.0.0.1:8000';
+            let sessionId = null; // Store session ID globally
+    
+            // Initialize session when page loads
+            initializeSession();
+    
+            // Initialize a new session
+            function initializeSession() {
+                $.ajax({
+                    type: "GET",
+                    url: `${apiUrl}/new_session`,
+                    success: function (response) {
+                        sessionId = response.session_id; // Assign session ID
+                        console.log("Session initialized:", sessionId);
+                        appendMessage("TH-Ro: Hello! How can I assist you today?", "bot-message");
+                    },
+                    error: function () {
+                        console.error("Failed to initialize session.");
+                        appendMessage("TH-Ro: Sorry, something went wrong initializing the chat.", "bot-message");
+                    }
+                });
+            }
+    
+            // Function to send user message to the backend
+            function sendMessage() {
+                const userMessage = $("#userInput").val().trim(); // Get input value
+                if (!userMessage) return; // Ignore empty messages
+    
+                appendMessage("You: " + userMessage, "user-message"); // Display user message
+    
+                $.ajax({
+                    type: "POST",
+                    url: `${apiUrl}/chat`,
+                    data: JSON.stringify({ message: userMessage, session_id: sessionId }),
+                    contentType: "application/json",
+                    success: function (response) {
+                        const botResponse = response.response; // Extract bot's reply
+                        appendMessage("TH-Ro: " + botResponse, "bot-message"); // Display bot response
+                    },
+                    error: function () {
+                        console.error("Error communicating with the backend.");
+                        appendMessage("TH-Ro: Sorry, something went wrong. Please try again.", "bot-message");
+                    }
+                });
+    
+                $("#userInput").val(""); // Clear the input field
+            }
+    
+            // Function to append messages to the chat window
+            function appendMessage(message, messageType) {
+                const messageElement = `
+                    <div class="message ${messageType}">${message}</div>
+                `;
+                $("#chatBody").append(messageElement);
+                $("#chatBody").scrollTop($("#chatBody")[0].scrollHeight); // Scroll to bottom
+            }
+    
+            // Event listeners for "Send" button and Enter key
+            $("#sendMessage").click(sendMessage);
+    
+            $("#userInput").keypress(function (e) {
+                if (e.which === 13) { 
+                    sendMessage();
+                }
+            });
+        });
+    </script>
+    
 </body>
 </html>
