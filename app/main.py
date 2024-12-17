@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from langchain_chroma import Chroma
+from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.chains import  ConversationalRetrievalChain, RetrievalQA
 from langchain.memory import ConversationBufferWindowMemory
@@ -56,7 +57,8 @@ memory_k = config['memory']['k']
 chain_type=config['qa']['chain_type']
 output_key=config['qa']['output_key']
 system_prompt=config['system_prompt']
-static_dir=static_dir = os.path.join(os.path.dirname(__file__), "app", "static")
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+
 session_histories: Dict[str, list] = {}
 session_timestamps: Dict[str, datetime] = {}
 
@@ -80,10 +82,22 @@ def initialize_llm():
     
 
 def make_retriever(embedding_model,vectorstore_path,search_type,search_kwargs):
-        embedding_function=HuggingFaceEmbeddings(model_name=embedding_model)
-        vs = Chroma(persist_directory=vectorstore_path, embedding_function=embedding_function)
-        retriever = vs.as_retriever(search_type=search_type, search_kwargs=search_kwargs)
-        return retriever
+    embedding_function=HuggingFaceEmbeddings(model_name=embedding_model)
+
+    if os.path.exists(vectorstore_path):
+        # Load existing FAISS index
+        vs = FAISS.load_local(vectorstore_path, embedding_function,allow_dangerous_deserialization=True)
+
+    else:
+        # Create a new FAISS index (requires at least one document)
+        # If no documents exist yet, initialize an empty index
+        from langchain.schema import Document
+        empty_docs = [Document(page_content="placeholder")]
+        vs = FAISS.from_documents(empty_docs, embedding_function)
+        vs.save_local(vectorstore_path)  # Save the new FAISS index
+
+    retriever = vs.as_retriever(search_type=search_type, search_kwargs=search_kwargs)
+    return retriever
 
 
 def create_prompt(question,chat_history):
@@ -100,7 +114,7 @@ def setup_memory(memory_k,return_messages=True):
         return_messages=return_messages)
 
 
-def qa_conv_chain(prompt, output_key=output_key):
+def qa_conv_chain(prompt):
     return ConversationalRetrievalChain.from_llm(
         llm=llm,
         chain_type=chain_type,
@@ -137,7 +151,8 @@ def querying(question,chat_history,session_id):
 
 
 
-'''    def chat_w_llm():
+'''def chat_w_llm():
+        chat_history=[]
         while True:
             question = input("You: ")
 
@@ -148,15 +163,16 @@ def querying(question,chat_history,session_id):
             # if user input given
             if question.strip():        
                 # Generate and display the chatbot's response
-                response = querying(question,chat_history)
-                print("\nTH-Rosenheim Assistant:", response)
-                chat_history.append((question, response)) '''
+                answer = querying(question,chat_history)
+                print("\nTH-Rosenheim Assistant:", answer)
+                chat_history.append((question, answer)) '''
         
     
-    
+
 retriever=make_retriever(embedding_model,vectorstore_path,search_type,search_kwargs)
 memory=setup_memory(memory_k)
 llm=initialize_llm()
+#chat_w_llm()
 
 
 
