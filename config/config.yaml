@@ -2,14 +2,22 @@ model_name: "llama3-8b-8192"
 temperature: 0.3
 max_tokens: null
 vectorstore:
-  path: "./docs/FAISS"
+  path_FAISS: "./docs/FAISS"
+  path_chroma: "./docs/chroma"
   embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+
+data_path: "../data/data.txt"
+
 retriever:
   search_type: "similarity"
   search_kwargs:
     k: 4
+
+splitter: "=================================================="
+
 memory:
   k: 10
+
 qa:
   chain_type: "stuff"
   output_key: "answer"
